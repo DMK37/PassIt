@@ -1,4 +1,4 @@
-module passit
+module userservice
 
 go 1.22.1
 

@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"log/slog"
 	"net/http"
-	"passit/internal/models"
+	"userservice/internal/models"
 
 	"github.com/gorilla/mux"
 )
