@@ -3,16 +3,15 @@ package api
 import (
 	"encoding/json"
 	"net/http"
-	"userservice/db"
 
 	"golang.org/x/crypto/bcrypt"
 )
 
 func (s *server) handleLogin(w http.ResponseWriter, r *http.Request) {
 
-	var loginReq db.User
+	var loginReq LoginRequest
 	if err := json.NewDecoder(r.Body).Decode(&loginReq); err != nil {
-		WriteJSON(w, http.StatusBadRequest, map[string]string{"error": "could not decode user"})
+		WriteJSON(w, http.StatusBadRequest, map[string]string{"error": "could not decode login request"})
 		return
 	}
 

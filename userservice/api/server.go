@@ -4,8 +4,8 @@ import (
 	"encoding/json"
 	"log/slog"
 	"net/http"
-	"userservice/db"
 
+	"github.com/DMK37/PassIt/userservice/db"
 	"github.com/gorilla/mux"
 )
 

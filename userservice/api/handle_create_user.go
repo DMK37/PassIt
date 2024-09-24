@@ -4,14 +4,14 @@ import (
 	"encoding/json"
 	"log/slog"
 	"net/http"
-	"userservice/db"
 
+	"github.com/DMK37/PassIt/userservice/db"
 	"golang.org/x/crypto/bcrypt"
 )
 
 func (s *server) handleCreateUser(w http.ResponseWriter, r *http.Request) {
 
-	var user db.User
+	var user CreateUserRequest
 	if err := json.NewDecoder(r.Body).Decode(&user); err != nil {
 		slog.Error("could not decode user", "error", err.Error())
 		WriteJSON(w, http.StatusBadRequest, map[string]string{"error": "could not decode user"})

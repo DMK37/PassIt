@@ -1,8 +1,6 @@
 package main
 
-import (
-	"userservice/api"
-)
+import "github.com/DMK37/PassIt/userservice/api"
 
 func main() {
 	s := api.NewServer(":8080")

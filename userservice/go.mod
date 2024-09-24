@@ -1,4 +1,4 @@
-module userservice
+module github.com/DMK37/PassIt/userservice
 
 go 1.22.1
 
