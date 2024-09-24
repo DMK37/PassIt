@@ -2,39 +2,53 @@ package api
 
 import (
 	"encoding/json"
-	"fmt"
 	"log/slog"
 	"net/http"
-	"userservice/internal/models"
+	"userservice/db"
 
 	"github.com/gorilla/mux"
 )
 
-type Server struct {
-	
+type server struct {
+	listenAddr   string
+	userAccessor db.UserAccessor
 }
 
-func (s *Server) Start() {
+func NewServer(listenAddr string) *server {
+
+	userAccessor, err := db.NewDynamoDBUserAccessor()
+	if err != nil {
+		slog.Error("could not create user accessor", "error", err.Error())
+		return nil
+	}
+	return &server{
+		listenAddr:   listenAddr,
+		userAccessor: userAccessor,
+	}
+}
+
+func (s *server) Start() {
+
 	r := mux.NewRouter()
 
-	r.HandleFunc("/users", s.createUser).Methods(http.MethodPost)
+	r.HandleFunc("/users", s.handleCreateUser).Methods(http.MethodPost)
+	r.HandleFunc("/login", s.handleLogin).Methods(http.MethodPost)
 
-	if err := http.ListenAndServe(":8080", nil); err != nil {
-        slog.Error("could not start server", "error", err.Error())
+	privateRouter := r.PathPrefix("/").Subrouter()
+	privateRouter.Use(authMiddleware)
+
+	privateRouter.HandleFunc("/users", s.handleGetUser).Methods(http.MethodGet)
+
+	slog.Info("UserService server starting", "addr", s.listenAddr)
+
+	if err := http.ListenAndServe(s.listenAddr, r); err != nil {
+		slog.Error("could not start server", "error", err.Error())
 	}
 }
 
-func (s *Server) createUser(w http.ResponseWriter, r *http.Request) {
+func WriteJSON(w http.ResponseWriter, status int, data any) error {
 
-	var user models.User
-	if err := json.NewDecoder(r.Body).Decode(&user); err != nil {
-        slog.Error("could not decode user", "error", err.Error())
-		http.Error(w, "could not decode user", http.StatusBadRequest)
-		return
-	}
-
-	// save user
-	fmt.Println("user", user)
 	w.Header().Set("Content-Type", "application/json")
-    json.NewEncoder(w).Encode(user)
+	w.WriteHeader(status)
+	return json.NewEncoder(w).Encode(data)
 }
