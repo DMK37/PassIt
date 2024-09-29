@@ -28,17 +28,24 @@ func (s *server) handleCreatePost(w http.ResponseWriter, r *http.Request) {
 	// Upload images to S3 and get URLs
 	imageURLs := make([]string, len(images))
 
-	for _, image := range images {
+	for i, image := range images {
 		url, err := s.imageStorage.UploadImage(image, userId)
 		if err != nil {
 			slog.Error("could not upload image", "error", err.Error())
 			WriteJSON(w, http.StatusInternalServerError, map[string]string{"error": "could not upload image"})
 			return
 		}
-		imageURLs = append(imageURLs, url)
+		imageURLs[i] = url
 	}
 
-	post := db.NewPost(userId, text, imageURLs)
+	user, err := s.postAccessor.GetPostUser(userId)
+	if err != nil {
+		slog.Error("could not get user", "error", err.Error())
+		WriteJSON(w, http.StatusInternalServerError, map[string]string{"error": "could not get user"})
+		return
+	}
+
+	post := db.NewPost(userId, text, imageURLs, *user)
 
 	if err := s.postAccessor.CreatePost(post); err != nil {
 		slog.Error("could not save post", "error", err.Error())

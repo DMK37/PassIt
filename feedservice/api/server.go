@@ -8,6 +8,7 @@ import (
 	"github.com/DMK37/PassIt/feedservice/db"
 	"github.com/DMK37/PassIt/feedservice/storage"
 	"github.com/gorilla/mux"
+	"github.com/rs/cors"
 )
 
 type server struct {
@@ -47,10 +48,20 @@ func (s *server) Start() {
 	privateRouter.Use(authMiddleware)
 
 	privateRouter.HandleFunc("/posts", s.handleCreatePost).Methods(http.MethodPost)
+	privateRouter.HandleFunc("/posts-following", s.handleGetFollowingPosts).Methods(http.MethodGet)
 
 	slog.Info("FeedService server starting", "addr", s.listenAddr)
 
-	if err := http.ListenAndServe(s.listenAddr, r); err != nil {
+	c := cors.New(cors.Options{
+        AllowedOrigins:   []string{"http://localhost:3000"}, // Update with your frontend URL
+        AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE"},
+        AllowedHeaders:   []string{"Content-Type", "Authorization"},
+        AllowCredentials: true,
+    })
+
+	handler := c.Handler(r)
+
+	if err := http.ListenAndServe(s.listenAddr, handler); err != nil {
 		slog.Error("could not start server", "error", err.Error())
 	}
 }

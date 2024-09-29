@@ -3,6 +3,7 @@ package db
 import (
 	"context"
 	"fmt"
+	"sort"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/config"
@@ -15,6 +16,8 @@ type PostAccessor interface {
 	CreatePost(post *Post) error
 	GetPost(userId, postId string) (*Post, error)
 	GetPosts(userId string, limit int32) ([]*Post, error)
+	GetFollowingPosts(userId string) ([]*Post, error)
+	GetPostUser(userId string) (*PostUser, error)
 }
 
 type DynamoDBPostAccessor struct {
@@ -30,6 +33,32 @@ func NewDynamoDBPostAccessor() (*DynamoDBPostAccessor, error) {
 	db := dynamodb.NewFromConfig(cfg)
 
 	return &DynamoDBPostAccessor{db: db}, nil
+}
+
+func (d *DynamoDBPostAccessor) GetPostUser(userId string) (*PostUser, error) {
+	inputU := &dynamodb.GetItemInput{
+		TableName: aws.String("PassItUsers"),
+		Key: map[string]types.AttributeValue{
+			"id": &types.AttributeValueMemberS{Value: userId},
+		},
+	}
+
+	result, err := d.db.GetItem(context.TODO(), inputU)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get item: %v", err)
+	}
+
+	if result.Item == nil {
+		return nil, fmt.Errorf("user not found")
+	}
+
+	user := &PostUser{}
+	err = attributevalue.UnmarshalMap(result.Item, user)
+	if err != nil {
+		return nil, fmt.Errorf("failed to unmarshal user: %v", err)
+	}
+
+	return user, nil
 }
 
 func (d *DynamoDBPostAccessor) CreatePost(post *Post) error {
@@ -101,5 +130,66 @@ func (d *DynamoDBPostAccessor) GetPosts(userId string, limit int32) ([]*Post, er
 		return nil, fmt.Errorf("failed to unmarshal posts: %v", err)
 	}
 
+	sort.Slice(posts, func(i, j int) bool {
+		return posts[i].Timestamp > posts[j].Timestamp
+	})
+
 	return posts, nil
+}
+
+func (d *DynamoDBPostAccessor) GetFollowingPosts(userId string) ([]*Post, error) {
+
+	input := &dynamodb.GetItemInput{
+		TableName: aws.String("PassItUsers"),
+		Key: map[string]types.AttributeValue{
+			"id": &types.AttributeValueMemberS{Value: userId},
+		},
+	}
+
+	result, err := d.db.GetItem(context.TODO(), input)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get item: %v", err)
+	}
+
+	if result.Item == nil {
+		return nil, fmt.Errorf("user not found")
+	}
+
+	user := &User{}
+	err = attributevalue.UnmarshalMap(result.Item, user)
+	if err != nil {
+		return nil, fmt.Errorf("failed to unmarshal user: %v", err)
+	}
+
+	following := user.Following
+
+	res := []*Post{}
+
+	for _, followingId := range following {
+		input := &dynamodb.QueryInput{
+			TableName:              aws.String("PassItPosts"),
+			KeyConditionExpression: aws.String("userId = :userId"),
+			ExpressionAttributeValues: map[string]types.AttributeValue{
+				":userId": &types.AttributeValueMemberS{Value: followingId},
+			},
+		}
+
+		result, err := d.db.Query(context.TODO(), input)
+		if err != nil {
+			return nil, fmt.Errorf("failed to query: %v", err)
+		}
+
+		posts := []*Post{}
+		if err = attributevalue.UnmarshalListOfMaps(result.Items, &posts); err != nil {
+			return nil, fmt.Errorf("failed to unmarshal posts: %v", err)
+		}
+
+		res = append(res, posts...)
+	}
+
+	sort.Slice(res, func(i, j int) bool {
+		return res[i].Timestamp > res[j].Timestamp
+	})
+
+	return res, nil
 }

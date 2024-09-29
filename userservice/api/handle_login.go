@@ -3,8 +3,6 @@ package api
 import (
 	"encoding/json"
 	"net/http"
-
-	"golang.org/x/crypto/bcrypt"
 )
 
 func (s *server) handleLogin(w http.ResponseWriter, r *http.Request) {
@@ -15,19 +13,15 @@ func (s *server) handleLogin(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	user, err := s.userAccessor.GetUserByUsername(loginReq.Username)
+	user, err := s.userAccessor.GetUserByEmail(loginReq.Email)
+
 	if err != nil {
 		WriteJSON(w, http.StatusInternalServerError, map[string]string{"error": "could not get user"})
 		return
 	}
 
-	if user == nil {
-		WriteJSON(w, http.StatusNotFound, map[string]string{"error": "invalid username or password"})
-		return
-	}
-
-	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(loginReq.Password)); err != nil {
-		WriteJSON(w, http.StatusUnauthorized, map[string]string{"error": "invalid username or password"})
+	if user == nil || (user.Password != loginReq.Password) {
+		WriteJSON(w, http.StatusNotFound, map[string]string{"error": "invalid email or password"})
 		return
 	}
 
@@ -37,5 +31,5 @@ func (s *server) handleLogin(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	WriteJSON(w, http.StatusOK, map[string]string{"token": token})
+	WriteJSON(w, http.StatusOK, map[string]string{"token": token, "user": user.String()})
 }

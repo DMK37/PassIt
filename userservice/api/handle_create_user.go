@@ -2,11 +2,11 @@ package api
 
 import (
 	"encoding/json"
+	"fmt"
 	"log/slog"
 	"net/http"
 
 	"github.com/DMK37/PassIt/userservice/db"
-	"golang.org/x/crypto/bcrypt"
 )
 
 func (s *server) handleCreateUser(w http.ResponseWriter, r *http.Request) {
@@ -17,17 +17,8 @@ func (s *server) handleCreateUser(w http.ResponseWriter, r *http.Request) {
 		WriteJSON(w, http.StatusBadRequest, map[string]string{"error": "could not decode user"})
 		return
 	}
-
-	hashedPasswordBytes, err := bcrypt.GenerateFromPassword([]byte(user.Password), bcrypt.DefaultCost)
-    if err != nil {
-        slog.Error("could not hash password", "error", err.Error())
-		WriteJSON(w, http.StatusInternalServerError, map[string]string{"error": "could not create user"})
-		return
-    }
-
-	hashedPassword := string(hashedPasswordBytes)
-
-	createdUser := db.NewUser(user.Username, hashedPassword, user.FirstName, user.LastName)
+	fmt.Println("Created user: ", user)
+	createdUser := db.NewUser(user.Username, user.Email, user.Password, user.FirstName, user.LastName)
 
 	if err := s.userAccessor.CreateUser(createdUser); err != nil {
 		slog.Error("could not create user", "error", err.Error())
@@ -37,5 +28,12 @@ func (s *server) handleCreateUser(w http.ResponseWriter, r *http.Request) {
 
 	slog.Info("user created", "id", createdUser.Id)
 
-	WriteJSON(w, http.StatusCreated, createdUser)
+	token, err := createToken(createdUser.Id, createdUser.Username)
+	if err != nil {
+		slog.Error("could not generate token", "error", err.Error())
+		WriteJSON(w, http.StatusInternalServerError, map[string]string{"error": "could not generate token"})
+		return
+	}
+
+	WriteJSON(w, http.StatusCreated, map[string]string{"token": token, "user": createdUser.String()})
 }
