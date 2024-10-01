@@ -41,6 +41,7 @@ func (s *server) Start() {
 
 	r := mux.NewRouter()
 
+	r.HandleFunc("/health", healthHandler).Methods(http.MethodGet)
 	r.HandleFunc("/users", s.handleCreateUser).Methods(http.MethodPost)
 	r.HandleFunc("/login", s.handleLogin).Methods(http.MethodPost)
 	r.HandleFunc("/users/{username}", s.handleGetUserProfile).Methods(http.MethodGet)

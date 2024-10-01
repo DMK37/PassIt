@@ -41,8 +41,9 @@ func (s *server) Start() {
 
 	r := mux.NewRouter()
 
-	r.HandleFunc("/users/{user_id}/posts/{post_id}", s.handleGetPost).Methods(http.MethodGet)
-	r.HandleFunc("/users/{user_id}/posts", s.handleGetPosts).Methods(http.MethodGet)
+	r.HandleFunc("/health", healthHandler).Methods(http.MethodGet)
+	r.HandleFunc("/posts/{post_id}/users/{user_id}", s.handleGetPost).Methods(http.MethodGet)
+	r.HandleFunc("/posts/users/{user_id}", s.handleGetPosts).Methods(http.MethodGet)
 
 	privateRouter := r.PathPrefix("/").Subrouter()
 	privateRouter.Use(authMiddleware)
@@ -53,11 +54,11 @@ func (s *server) Start() {
 	slog.Info("FeedService server starting", "addr", s.listenAddr)
 
 	c := cors.New(cors.Options{
-        AllowedOrigins:   []string{"http://localhost:3000"}, // Update with your frontend URL
-        AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE"},
-        AllowedHeaders:   []string{"Content-Type", "Authorization"},
-        AllowCredentials: true,
-    })
+		AllowedOrigins:   []string{"http://localhost:3000", "https://pass-it.space/"}, // Update with your frontend URL
+		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE"},
+		AllowedHeaders:   []string{"Content-Type", "Authorization"},
+		AllowCredentials: true,
+	})
 
 	handler := c.Handler(r)
 

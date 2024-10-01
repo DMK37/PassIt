@@ -1,11 +1,11 @@
 import axios from "axios";
 import { Post } from "../types/post";
 
-const API_URL = "http://localhost:8081";
+const API_URL = "http://userservice-lb-2124152758.us-east-1.elb.amazonaws.com";
 
 export const getPosts = async (userId: string): Promise<Post[]> => {
   try {
-    const response = await axios.get<Post[]>(`${API_URL}/users/${userId}/posts`);
+    const response = await axios.get<Post[]>(`${API_URL}/posts/users/${userId}`);
     return response.data;
   } catch (error) {
     if (axios.isAxiosError(error)) {
@@ -53,7 +53,7 @@ export const getPost = async (
 ): Promise<Post> => {
   try {
     const response = await axios.get<Post>(
-      `${API_URL}/users/${userId}/posts/${postId}`
+      `${API_URL}/posts/${postId}/users/${userId}`
     );
     return response.data;
   } catch (error) {
