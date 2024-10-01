@@ -54,7 +54,7 @@ func (s *server) Start() {
 	slog.Info("FeedService server starting", "addr", s.listenAddr)
 
 	c := cors.New(cors.Options{
-		AllowedOrigins:   []string{"http://localhost:3000", "https://pass-it.space/"}, // Update with your frontend URL
+		AllowedOrigins:   []string{"http://localhost:3000", "https://pass-it.space"}, // Update with your frontend URL
 		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE"},
 		AllowedHeaders:   []string{"Content-Type", "Authorization"},
 		AllowCredentials: true,
