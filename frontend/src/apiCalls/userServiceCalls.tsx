@@ -2,8 +2,9 @@ import axios from "axios";
 import { hashPassword } from "../utils/Encryption";
 import { User } from "../types/user";
 
-const API_URL = "http://userservice-lb-2124152758.us-east-1.elb.amazonaws.com"; // Replace with your API URL
-// localhost:8080
+// const API_URL = "http://userservice-lb-2124152758.us-east-1.elb.amazonaws.com"; // Replace with your API URL
+
+const API_URL = "http://localhost:8080";
 interface LoginResponse {
   token: string;
   user: User;

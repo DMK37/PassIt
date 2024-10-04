@@ -13,6 +13,7 @@ type Post struct {
 	Text      string   `json:"text" dynamodbav:"text"`
 	Images    []string `json:"images" dynamodbav:"images"`
 	Timestamp int64    `json:"timestamp" dynamodbav:"timestamp"`
+	Likes     []string `json:"likes" dynamodbav:"likes"`
 }
 
 type PostUser struct {
@@ -30,5 +31,6 @@ func NewPost(userId string, text string, images []string, user PostUser) *Post {
 		Text:      text,
 		Images:    images,
 		Timestamp: time.Now().Unix(),
+		Likes:     []string{},
 	}
 }

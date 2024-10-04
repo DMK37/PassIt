@@ -50,6 +50,8 @@ func (s *server) Start() {
 
 	privateRouter.HandleFunc("/posts", s.handleCreatePost).Methods(http.MethodPost)
 	privateRouter.HandleFunc("/posts-following", s.handleGetFollowingPosts).Methods(http.MethodGet)
+	privateRouter.HandleFunc("/posts/like", s.handleLike).Methods(http.MethodPost)
+	privateRouter.HandleFunc("/posts/unlike", s.handleUnlike).Methods(http.MethodPost)
 
 	slog.Info("FeedService server starting", "addr", s.listenAddr)
 

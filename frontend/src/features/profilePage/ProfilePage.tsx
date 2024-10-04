@@ -118,6 +118,7 @@ const ProfilePage = () => {
           _hover={{ bg: "accent" }}
           borderRadius={20}
           onClick={onEditModalOpen}
+          color={"background"}
         >
           Edit Profile
         </Button>
@@ -130,6 +131,7 @@ const ProfilePage = () => {
           _hover={{ bg: "accent" }}
           borderRadius={20}
           onClick={onPostModalOpen}
+          color={"background"}
         >
           Add Post
         </Button>

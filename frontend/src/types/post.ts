@@ -5,6 +5,7 @@ export type Post = {
     text: string;
     images: string[];
     timestamp: number;
+    likes: string[];
 };
 
 export type PostUser = {

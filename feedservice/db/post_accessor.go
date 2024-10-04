@@ -18,6 +18,8 @@ type PostAccessor interface {
 	GetPosts(userId string, limit int32) ([]*Post, error)
 	GetFollowingPosts(userId string) ([]*Post, error)
 	GetPostUser(userId string) (*PostUser, error)
+	LikePost(userId, postId, ownerId string) error
+	UnlikePost(userId, postId, ownerId string) error
 }
 
 type DynamoDBPostAccessor struct {
@@ -192,4 +194,97 @@ func (d *DynamoDBPostAccessor) GetFollowingPosts(userId string) ([]*Post, error)
 	})
 
 	return res, nil
+}
+
+func (d *DynamoDBPostAccessor) LikePost(userId, postId, OwnerId string) error {
+
+	post, err := d.GetPost(OwnerId, postId)
+	if err != nil {
+		return fmt.Errorf("failed to get post: %v", err)
+	}
+
+	if post == nil {
+		return fmt.Errorf("post not found")
+	}
+
+	if !contains(post.Likes, userId) {
+		post.Likes = append(post.Likes, userId)
+	}
+
+	av, err := attributevalue.MarshalMap(post)
+	if err != nil {
+		return fmt.Errorf("failed to marshal post: %v", err)
+	}
+
+	input := &dynamodb.PutItemInput{
+		TableName: aws.String("PassItPosts"),
+		Item:      av,
+	}
+
+	_, err = d.db.PutItem(context.TODO(), input)
+	if err != nil {
+		return fmt.Errorf("failed to put item: %v", err)
+	}
+
+	return nil
+}
+
+func contains(arr []string, str string) bool {
+	for _, a := range arr {
+		if a == str {
+			return true
+		}
+	}
+	return false
+}
+
+func (d *DynamoDBPostAccessor) UnlikePost(userId, postId, OwnerId string) error {
+
+	post, err := d.GetPost(OwnerId, postId)
+	if err != nil {
+		return fmt.Errorf("failed to get post: %v", err)
+	}
+
+	if post == nil {
+		return fmt.Errorf("post not found")
+	}
+
+	if contains(post.Likes, userId) {
+		post.Likes = remove(post.Likes, userId)
+	}
+
+	av, err := attributevalue.MarshalMap(post)
+	if err != nil {
+		return fmt.Errorf("failed to marshal post: %v", err)
+	}
+
+	input := &dynamodb.PutItemInput{
+		TableName: aws.String("PassItPosts"),
+		Item:      av,
+	}
+
+	_, err = d.db.PutItem(context.TODO(), input)
+	if err != nil {
+		return fmt.Errorf("failed to put item: %v", err)
+	}
+
+	return nil
+}
+
+func remove(arr []string, str string) []string {
+
+	index := -1
+	for i, a := range arr {
+		if a == str {
+			index = i
+			break
+		}
+	}
+
+	if index == -1 {
+		return arr
+	}
+
+	arr[index] = arr[len(arr)-1]
+	return arr[:len(arr)-1]
 }

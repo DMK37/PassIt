@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import { User } from "../types/user";
+import { jwtDecode } from "jwt-decode";
 
 interface UserStore {
   user: User | null;
@@ -22,5 +23,24 @@ const useUserStore = create<UserStore>()(
     }
   )
 );
+
+interface TokenPayload {
+  exp: number;
+}
+
+export const isTokenExpired = (token: string | null): boolean => {
+  if (!token) return true;
+
+  try {
+    const { exp } = jwtDecode<TokenPayload>(token);
+    if (Date.now() >= exp * 1000) {
+      return true;
+    }
+  } catch (error) {
+    return true;
+  }
+
+  return false;
+};
 
 export default useUserStore;

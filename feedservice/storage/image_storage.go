@@ -46,7 +46,7 @@ func (s *S3ImageStorage) UploadImage(image *multipart.FileHeader, userId string)
 		return "", err
 	}
 
-	imageURL := "http://pass-it-images.space/" + userId + "/" + image.Filename
+	imageURL := "https://d3ont4hpyr9jps.cloudfront.net/" + userId + "/" + image.Filename
 
 	return imageURL, nil
 }
