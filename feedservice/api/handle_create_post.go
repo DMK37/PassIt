@@ -38,14 +38,7 @@ func (s *server) handleCreatePost(w http.ResponseWriter, r *http.Request) {
 		imageURLs[i] = url
 	}
 
-	user, err := s.postAccessor.GetPostUser(userId)
-	if err != nil {
-		slog.Error("could not get user", "error", err.Error())
-		WriteJSON(w, http.StatusInternalServerError, map[string]string{"error": "could not get user"})
-		return
-	}
-
-	post := db.NewPost(userId, text, imageURLs, *user)
+	post := db.NewPost(userId, text, imageURLs)
 
 	if err := s.postAccessor.CreatePost(post); err != nil {
 		slog.Error("could not save post", "error", err.Error())
@@ -53,5 +46,14 @@ func (s *server) handleCreatePost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	WriteJSON(w, http.StatusOK, post)
+	user, err := s.postAccessor.GetPostUser(userId)
+	if err != nil {
+		slog.Error("could not get user", "error", err.Error())
+		WriteJSON(w, http.StatusInternalServerError, map[string]string{"error": "could not get user"})
+		return
+	}
+
+	responsePost := mapPostToResponsePost(post, user)
+
+	WriteJSON(w, http.StatusOK, responsePost)
 }
