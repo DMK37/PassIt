@@ -7,6 +7,12 @@ type LikeRequest struct {
 	PostId string `json:"post_id"`
 }
 
+type CommentRequest struct {
+	OwnerId string `json:"owner_id"`
+	PostId string `json:"post_id"`
+	Text string `json:"text"`
+}
+
 type ResponsePost struct {
 	Id        string   `json:"id" dynamodbav:"postId"`
 	UserId    string   `json:"user_id" dynamodbav:"userId"`
@@ -15,7 +21,7 @@ type ResponsePost struct {
 	Images    []string `json:"images" dynamodbav:"images"`
 	Timestamp int64    `json:"timestamp" dynamodbav:"timestamp"`
 	Likes     []string `json:"likes" dynamodbav:"likes"`
-	Comments  []string `json:"comments" dynamodbav:"comments"`
+	Comments  []db.Comment `json:"comments" dynamodbav:"comments"`
 }
 
 type PostUser struct {

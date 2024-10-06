@@ -20,6 +20,7 @@ type PostAccessor interface {
 	GetPostUser(userId string) (*User, error)
 	LikePost(userId, postId, ownerId string) error
 	UnlikePost(userId, postId, ownerId string) error
+	CommentPost(userId, postId, ownerId, comment string) error
 }
 
 type DynamoDBPostAccessor struct {
@@ -279,36 +280,33 @@ func remove(arr []string, str string) []string {
 	return arr[:len(arr)-1]
 }
 
-// func (d *DynamoDBPostAccessor) CommentPost(userId, postId, ownerId, comment string) error {
+func (d *DynamoDBPostAccessor) CommentPost(userId, postId, ownerId, comment string) error {
 
-// 	post, err := d.GetPost(ownerId, postId)
-// 	if err != nil {
-// 		return fmt.Errorf("failed to get post: %v", err)
-// 	}
+	post, _, err := d.GetPost(ownerId, postId)
+	if err != nil {
+		return fmt.Errorf("failed to get post: %v", err)
+	}
 
-// 	if post == nil {
-// 		return fmt.Errorf("post not found")
-// 	}
+	if post == nil {
+		return fmt.Errorf("post not found")
+	}
 
-// 	post.Comments = append(post.Comments, Comment{
-// 		UserId: userId,
-// 		Comment: comment,
-// 	})
+	post.Comments = append(post.Comments, Comment{UserId: userId, Text: comment})
 
-// 	av, err := attributevalue.MarshalMap(post)
-// 	if err != nil {
-// 		return fmt.Errorf("failed to marshal post: %v", err)
-// 	}
+	av, err := attributevalue.MarshalMap(post)
+	if err != nil {
+		return fmt.Errorf("failed to marshal post: %v", err)
+	}
 
-// 	input := &dynamodb.PutItemInput{
-// 		TableName: aws.String("PassItPosts"),
-// 		Item:      av,
-// 	}
+	input := &dynamodb.PutItemInput{
+		TableName: aws.String("PassItPosts"),
+		Item:      av,
+	}
 
-// 	_, err = d.db.PutItem(context.TODO(), input)
-// 	if err != nil {
-// 		return fmt.Errorf("failed to put item: %v", err)
-// 	}
+	_, err = d.db.PutItem(context.TODO(), input)
+	if err != nil {
+		return fmt.Errorf("failed to put item: %v", err)
+	}
 
-// 	return nil
-// }
+	return nil
+}

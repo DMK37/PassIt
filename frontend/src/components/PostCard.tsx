@@ -70,6 +70,10 @@ export const PostCard: React.FC<PostCardProps> = ({ post }) => {
     setSelectedImage("");
   };
 
+  const handleRedirectToProfile = () => {
+    navigate(`/user/${post.user.username}`);
+  };
+
   return (
     <Box
       key={post.id}
@@ -82,13 +86,30 @@ export const PostCard: React.FC<PostCardProps> = ({ post }) => {
       mt={5}
     >
       <HStack align="start">
-        <Avatar name={post?.user.username} mb={5} src={post.user.avatar} />\{" "}
+        <Avatar
+          name={post?.user.username}
+          mb={5}
+          src={post.user.avatar}
+          cursor="pointer"
+          onClick={handleRedirectToProfile}
+        />
+        \{" "}
         <VStack align="start" spacing={1}>
           <HStack>
-            <Text fontWeight="bold">
+            <Text
+              fontWeight="bold"
+              cursor="pointer"
+              onClick={handleRedirectToProfile}
+            >
               {post.user.first_name} {post.user.last_name}
             </Text>
-            <Text color="gray.600">@{post.user.username}</Text>
+            <Text
+              color="gray.600"
+              cursor="pointer"
+              onClick={handleRedirectToProfile}
+            >
+              @{post.user.username}
+            </Text>
             <Text color="gray.500">· {formattedDate}</Text>
           </HStack>
 

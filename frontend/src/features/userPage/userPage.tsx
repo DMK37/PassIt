@@ -14,13 +14,17 @@ const UserPage = () => {
   const authUser = useUserStore((state) => state.user);
   const token = useUserStore((state) => state.token);
 
-  const[isFollowing, setIsFollowing] = useState<boolean>(authUser!.following.includes(user?.id!));
+  const[isFollowing, setIsFollowing] = useState<boolean>(authUser != null && authUser.following.includes(user?.id!));
 
   const [posts, setPosts] = useState<Post[]>([]);
   const { username } = useParams<{ username: string }>(); // Get the route variable
   const navigate = useNavigate();
 
   const onFollowUser = async () => {
+    if (!token) {
+      navigate("/signin");
+      return;
+    }
     if (isFollowing) {
       await unfollowUser(user!.id!, token!);
       setUser({ ...user!, followers: user!.followers!.filter((id) => id !== authUser!.id) });
